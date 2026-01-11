@@ -28,9 +28,9 @@ async function handler(job: { input: RenderInput }) {
     try {
         console.log("🎥 Rendering to:", outputPath);
         
-        // Use Revideo CLI to render
+        // Use globally installed Revideo CLI to render
         const projectFile = path.resolve('./src/project.ts');
-        const renderCommand = `npx revideo render "${projectFile}" --output "${outputPath}"`;
+        const renderCommand = `revideo render "${projectFile}" --output "${outputPath}"`;
         
         console.log("Running command:", renderCommand);
         const { stdout, stderr } = await execAsync(renderCommand);
