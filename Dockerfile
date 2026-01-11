@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y \
     libx11-xcb1 \
     libxcomposite1 \
     libxcursor1 \
-    libxdamage1 \
     libxi6 \
     libxtst6 \
     libnss3 \
@@ -35,25 +34,12 @@ WORKDIR /app
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Copy package files
+# Copy built application (built locally to avoid npm install issues)
+COPY dist ./dist
 COPY package.json ./
-# COPY package-lock.json ./ # If you have one
 
-# Install yarn
-RUN npm install -g yarn
-
-# Install dependencies (including runpod)
-RUN yarn install
-
-# Try to install Revideo packages that were working in the original project
-RUN yarn global add @revideo/cli@0.10.3 @revideo/2d@^0.10.4 @revideo/core@^0.10.4 || echo "Some Revideo packages may not be available, will use npx fallback"
-
-# Copy source code
-COPY vite.config.ts tsconfig.json ./
-COPY src ./src
-
-# Build the project (compile TS)
-RUN npm run build
+# Install only production dependencies (none currently)
+RUN npm install --production
 
 # Start the handler
-CMD ["npm", "start"]
+CMD ["node", "dist/handler.js"]

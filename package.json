@@ -7,9 +7,7 @@
     "start": "node dist/handler.js",
     "dev": "tsx src/handler.ts"
   },
-  "dependencies": {
-    "runpod": "^2.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsx": "^4.7.0",

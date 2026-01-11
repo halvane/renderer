@@ -1,39 +1,44 @@
 import {Rect, Txt, makeScene2D} from '@revideo/2d';
-import {createRef, useScene} from '@revideo/core';
+import {createRef} from '@revideo/core';
 
-export default makeScene2D(function* (view) {
+export default makeScene2D('example', function* (view) {
   const txtRef = createRef<Txt>();
   const bgRef = createRef<Rect>();
 
   // Get variables passed from the handler
-  const title = useScene().variables.get('title', 'RunPod Render')();
-  const subtitle = useScene().variables.get('subtitle', 'Serverless Video Generation')();
-  const themeColor = useScene().variables.get('themeColor', '#00ff88')();
+  const title = 'RunPod Render'; // For now, hardcoded
+  const subtitle = 'Serverless Video Generation';
+  const themeColor = '#00ff88';
 
   view.add(
-    <Rect
-        ref={bgRef}
-        size={'100%'}
-        fill={'#111111'}
-    >
-      <Txt
-        ref={txtRef}
-        text={title}
-        fill={'white'}
-        fontSize={120}
-        fontFamily={'Arial, sans-serif'}
-        fontWeight={800}
-        y={-50}
-      />
-      <Txt
-        text={subtitle}
-        fill={themeColor}
-        fontSize={60}
-        fontFamily={'Arial, sans-serif'}
-        y={80}
-        opacity={0.8}
-      />
-    </Rect>
+    new Rect({
+      ref: bgRef,
+      size: view.size,
+      fill: '#111111'
+    })
+  );
+
+  view.add(
+    new Txt({
+      ref: txtRef,
+      text: title,
+      fill: 'white',
+      fontSize: 120,
+      fontFamily: 'Arial, sans-serif',
+      fontWeight: 800,
+      y: -50
+    })
+  );
+
+  view.add(
+    new Txt({
+      text: subtitle,
+      fill: themeColor,
+      fontSize: 60,
+      fontFamily: 'Arial, sans-serif',
+      y: 80,
+      opacity: 0.8
+    })
   );
 
   // Simple animation

@@ -1,5 +1,5 @@
 import {makeProject} from '@revideo/core';
-import example from './scenes/example?scene';
+import example from './scenes/example';
 
 export default makeProject({
   scenes: [example],
@@ -9,9 +9,9 @@ export default makeProject({
     },
     rendering: {
         exporter: {
-            name: '@revideo/renderer-ffmpeg',
+            name: '@revideo/core/ffmpeg',
             options: {
-                fps: 30,
+                format: 'mp4'
             }
         }
     }
