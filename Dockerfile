@@ -42,8 +42,11 @@ COPY package.json ./
 # Install dependencies
 RUN npm install
 
-# Install Revideo CLI globally with its dependencies
-RUN npm install -g @revideo/cli@0.10.3 @revideo/core@0.10.4 @revideo/2d@0.10.4 runpod
+# Install runpod first
+RUN npm install -g runpod
+
+# Install Revideo CLI globally
+RUN npm install -g @revideo/cli @revideo/core @revideo/2d
 
 # Copy source code
 COPY vite.config.ts tsconfig.json ./
