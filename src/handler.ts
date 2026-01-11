@@ -37,11 +37,7 @@ async function renderVideo(input: RenderInput): Promise<any> {
         // Direct library call instead of CLI
         const outputPath = await renderVideoLib({
             projectFile,
-            variables,
-            settings: {
-                outputFileName: outputFileName,
-                outputFolderName: 'output'
-            }
+            variables
         });
 
         console.log("✅ Render complete:", outputPath);
