@@ -19,9 +19,9 @@ async function renderVideo(input) {
     }
     const outputPath = path_1.default.join(outputDir, outputFileName);
     try {
-        // Use Revideo CLI to render (try global first, fallback to npx)
-        const projectFile = path_1.default.resolve('./src/project.ts');
-        const renderCommand = `revideo render "${projectFile}" --output "${outputPath}" 2>/dev/null || npx -p @revideo/cli revideo render "${projectFile}" --output "${outputPath}"`;
+        // Use npx to run Revideo CLI with the compiled JavaScript file
+        const projectFile = path_1.default.resolve('./dist/project.js');
+        const renderCommand = `npx -y @revideo/cli@0.10.4 render "${projectFile}" --output "${outputPath}"`;
         console.log("Running command:", renderCommand);
         const { stdout, stderr } = await execAsync(renderCommand);
         if (stderr) {
@@ -37,6 +37,7 @@ async function renderVideo(input) {
             status: 'completed',
             message: 'Video rendered successfully',
             output_path: outputPath,
+            output_url: `/output/${outputFileName}`,
             file_size: fs_1.default.statSync(outputPath).size
         };
     }
@@ -50,6 +51,32 @@ async function renderVideo(input) {
 }
 // Create HTTP server to handle RunPod requests
 const server = http_1.default.createServer(async (req, res) => {
+    // Serve static files from output directory
+    if (req.method === 'GET' && req.url?.startsWith('/output/')) {
+        const fileName = req.url.replace('/output/', '');
+        // Validate filename to prevent directory traversal
+        if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+            res.writeHead(403);
+            res.end('Forbidden');
+            return;
+        }
+        const filePath = path_1.default.join(path_1.default.resolve('output'), fileName);
+        if (fs_1.default.existsSync(filePath)) {
+            const stat = fs_1.default.statSync(filePath);
+            res.writeHead(200, {
+                'Content-Type': 'video/mp4',
+                'Content-Length': stat.size
+            });
+            const readStream = fs_1.default.createReadStream(filePath);
+            readStream.pipe(res);
+            return;
+        }
+        else {
+            res.writeHead(404);
+            res.end('File not found');
+            return;
+        }
+    }
     if (req.method === 'POST' && req.url === '/') {
         let body = '';
         req.on('data', chunk => {
@@ -84,7 +111,7 @@ const server = http_1.default.createServer(async (req, res) => {
     }
 });
 const PORT = process.env.PORT || 8000;
-server.listen(PORT, () => {
+server.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`🚀 Revideo renderer listening on port ${PORT}`);
 });
 //# sourceMappingURL=handler.js.map
