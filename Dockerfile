@@ -39,14 +39,14 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 COPY package.json ./
 # COPY package-lock.json ./ # If you have one
 
-# Install dependencies
-RUN npm install
+# Install yarn
+RUN npm install -g yarn
 
-# Install runpod globally
-RUN npm install -g runpod
+# Install dependencies (including runpod)
+RUN yarn install
 
 # Try to install Revideo packages that were working in the original project
-RUN npm install -g @revideo/cli@0.10.3 @revideo/2d@^0.10.4 @revideo/core@^0.10.4 || echo "Some Revideo packages may not be available, will use npx fallback"
+RUN yarn global add @revideo/cli@0.10.3 @revideo/2d@^0.10.4 @revideo/core@^0.10.4 || echo "Some Revideo packages may not be available, will use npx fallback"
 
 # Copy source code
 COPY vite.config.ts tsconfig.json ./
