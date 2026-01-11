@@ -5,7 +5,7 @@ import http from 'http';
 
 // Configure Puppeteer for Docker environment
 process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
-process.env.PUPPETEER_ARGS = '--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu,--no-first-run,--disable-default-apps,--disable-background-timer-throttling,--disable-renderer-backgrounding,--disable-backgrounding-occluded-windows,--disable-features=VizDisplayCompositor';
+process.env.PUPPETEER_ARGS = '--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-features=VizDisplayCompositor';
 
 interface RenderInput {
     variables?: Record<string, any>;
@@ -41,7 +41,17 @@ async function renderVideo(input: RenderInput): Promise<any> {
         // Direct library call instead of CLI
         const outputPath = await renderVideoLib({
             projectFile,
-            variables
+            variables,
+            browser: {
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--no-first-run',
+                    '--disable-default-apps'
+                ]
+            }
         });
 
         console.log("✅ Render complete:", outputPath);
