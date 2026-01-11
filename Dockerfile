@@ -33,7 +33,7 @@ WORKDIR /app
 # Set Puppeteer env to use installed chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_ARGS="--disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-features=VizDisplayCompositor --disable-extensions --disable-plugins --disable-images --disable-javascript --disable-web-security --disable-features=VizDisplayCompositor,VizHitTestSurfaceLayer --disable-crash-reporter --disable-breakpad --disable-logging --disable-component-extensions-with-background-pages"
+ENV PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-features=VizDisplayCompositor --disable-extensions --disable-plugins --disable-images --disable-javascript --disable-web-security --disable-features=VizDisplayCompositor,VizHitTestSurfaceLayer --disable-crash-reporter --disable-breakpad --disable-logging --disable-component-extensions-with-background-pages"
 ENV CHROME_CRASHPAD_DATABASE=/tmp/chromium-crashpad
 
 # Copy package files first for caching
