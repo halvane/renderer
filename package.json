@@ -12,6 +12,7 @@
     "@revideo/core": "^0.10.4",
     "@revideo/2d": "^0.10.4",
     "@revideo/ffmpeg": "^0.10.4",
+    "@revideo/vite-plugin": "^0.10.4",
     "puppeteer": "^23.4.0"
   },
   "devDependencies": {
