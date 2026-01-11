@@ -1,10 +1,7 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { renderVideo as renderVideoLib } from '@revideo/renderer';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
-
-const execAsync = promisify(exec);
 
 interface RenderInput {
     variables?: Record<string, any>;
@@ -24,7 +21,7 @@ interface RunPodResponse {
 
 async function renderVideo(input: RenderInput): Promise<any> {
     const variables = input.variables || {};
-    const outputFileName = input.outputFileName || `output-${Date.now()}.mp4`;
+    const outputFileName = input.outputFileName || `output-${Date.now()}`;
 
     console.log("🚀 Starting render job with input:", JSON.stringify(input));
 
@@ -33,34 +30,33 @@ async function renderVideo(input: RenderInput): Promise<any> {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    const outputPath = path.join(outputDir, outputFileName);
-
     try {
-        // Use npx to run Revideo CLI with the compiled JavaScript file
-        const projectFile = path.resolve('./dist/project.js');
-        const renderCommand = `npx -y @revideo/cli@0.10.4 render "${projectFile}" --output "${outputPath}"`;
+        const projectFile = path.resolve('./src/project.ts');
+        console.log(`Rendering project: ${projectFile}`);
 
-        console.log("Running command:", renderCommand);
-        const { stdout, stderr } = await execAsync(renderCommand);
+        // Direct library call instead of CLI
+        const outputPath = await renderVideoLib({
+            projectFile,
+            variables,
+            settings: {
+                projectSettings: {
+                    exporter: {
+                        name: '@revideo/core/ffmpeg',
+                        options: { format: 'mp4' }
+                    }
+                },
+                outputFileName: outputFileName,
+                outputFolderName: 'output'
+            }
+        });
 
-        if (stderr) {
-            console.log("Render stderr:", stderr);
-        }
-
-        console.log("Render stdout:", stdout);
-
-        // Check if output file was created
-        if (!fs.existsSync(outputPath)) {
-            throw new Error(`Output file was not created: ${outputPath}`);
-        }
-
-        console.log("✅ Render complete!");
+        console.log("✅ Render complete:", outputPath);
 
         return {
             status: 'completed',
             message: 'Video rendered successfully',
             output_path: outputPath,
-            output_url: `/output/${outputFileName}`,
+            output_url: `/output/${path.basename(outputPath)}`,
             file_size: fs.statSync(outputPath).size
         };
 

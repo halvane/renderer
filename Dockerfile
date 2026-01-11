@@ -34,12 +34,17 @@ WORKDIR /app
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Copy built application (built locally to avoid npm install issues)
-COPY dist ./dist
+# Copy package files first for caching
 COPY package.json ./
 
-# Install only production dependencies (none currently)
-RUN npm install --production
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build the project
+RUN npm run build
 
 # Start the handler
 CMD ["node", "dist/handler.js"]
