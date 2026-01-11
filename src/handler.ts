@@ -39,12 +39,6 @@ async function renderVideo(input: RenderInput): Promise<any> {
             projectFile,
             variables,
             settings: {
-                projectSettings: {
-                    exporter: {
-                        name: '@revideo/core/ffmpeg',
-                        options: { format: 'mp4' }
-                    }
-                },
                 outputFileName: outputFileName,
                 outputFolderName: 'output'
             }
