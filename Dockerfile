@@ -33,6 +33,7 @@ WORKDIR /app
 # Set Puppeteer env to use installed chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-features=VizDisplayCompositor"
 
 # Copy package files first for caching
 COPY package.json ./
@@ -45,6 +46,11 @@ COPY . .
 
 # Build the project
 RUN npm run build
+
+# Create non-root user for running the app
+RUN useradd -r -s /bin/false renderer
+RUN chown -R renderer:renderer /app
+USER renderer
 
 # Start the handler
 CMD ["node", "dist/handler.js"]
