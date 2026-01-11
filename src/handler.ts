@@ -3,6 +3,10 @@ import path from 'path';
 import fs from 'fs';
 import http from 'http';
 
+// Configure Puppeteer for Docker environment
+process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
+process.env.PUPPETEER_ARGS = '--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu,--no-first-run,--disable-default-apps,--disable-background-timer-throttling,--disable-renderer-backgrounding,--disable-backgrounding-occluded-windows,--disable-features=VizDisplayCompositor';
+
 interface RenderInput {
     variables?: Record<string, any>;
     outputFileName?: string;
