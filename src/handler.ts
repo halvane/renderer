@@ -2,16 +2,10 @@ import { renderVideo as renderVideoLib } from '@revideo/renderer';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
-import puppeteer from 'puppeteer';
 
 // Configure Puppeteer for Docker environment
 process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
 process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-features=VizDisplayCompositor --disable-crash-reporter --disable-breakpad';
-
-// Also try setting default launch args
-if (puppeteer.defaultArgs) {
-  puppeteer.defaultArgs(['--no-sandbox', '--disable-dev-shm-usage']);
-}
 
 interface RenderInput {
     variables?: Record<string, any>;
