@@ -42,11 +42,11 @@ COPY package.json ./
 # Install dependencies
 RUN npm install
 
-# Install runpod first
+# Install runpod globally
 RUN npm install -g runpod
 
-# Install Revideo CLI globally
-RUN npm install -g @revideo/cli @revideo/core @revideo/2d
+# Try to install Revideo packages that were working in the original project
+RUN npm install -g @revideo/cli@0.10.3 @revideo/2d@^0.10.4 @revideo/core@^0.10.4 || echo "Some Revideo packages may not be available, will use npx fallback"
 
 # Copy source code
 COPY vite.config.ts tsconfig.json ./
