@@ -41,17 +41,7 @@ async function renderVideo(input: RenderInput): Promise<any> {
         // Direct library call instead of CLI
         const outputPath = await renderVideoLib({
             projectFile,
-            variables,
-            browser: {
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--no-first-run',
-                    '--disable-default-apps'
-                ]
-            }
+            variables
         });
 
         console.log("✅ Render complete:", outputPath);
