@@ -1,7 +1,10 @@
 import runpod from 'runpod';
-import {render} from '@revideo/core';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
+
+const execAsync = promisify(exec);
 
 interface RenderInput {
     variables?: Record<string, any>;
@@ -25,25 +28,23 @@ async function handler(job: { input: RenderInput }) {
     try {
         console.log("🎥 Rendering to:", outputPath);
         
-        await render({
-            projectFile: './src/project.ts',
-            variables: variables,
-            output: outputPath,
-            settings: {
-                workers: 1, // RunPod usually single container, maybe 2 workers if CPU allows
-                puppeteer: {
-                    args: [
-                        '--no-sandbox', 
-                        '--disable-setuid-sandbox', 
-                        '--disable-dev-shm-usage',
-                        '--disable-gpu'
-                    ]
-                }
-            },
-            progress: (progress: number) => {
-                console.log(`📊 Progress: ${(progress * 100).toFixed(1)}%`);
-            }
-        });
+        // Use Revideo CLI to render
+        const projectFile = path.resolve('./src/project.ts');
+        const renderCommand = `npx revideo render "${projectFile}" --output "${outputPath}"`;
+        
+        console.log("Running command:", renderCommand);
+        const { stdout, stderr } = await execAsync(renderCommand);
+        
+        if (stderr) {
+            console.log("Render stderr:", stderr);
+        }
+        
+        console.log("Render stdout:", stdout);
+        
+        // Check if output file was created
+        if (!fs.existsSync(outputPath)) {
+            throw new Error(`Output file was not created: ${outputPath}`);
+        }
 
         console.log("✅ Render complete!");
 
