@@ -1,5 +1,5 @@
 import runpod from 'runpod';
-import {render} from '@revideo/renderer';
+import {render} from '@revideo/core';
 import path from 'path';
 import fs from 'fs';
 
