@@ -33,7 +33,8 @@ WORKDIR /app
 # Set Puppeteer env to use installed chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-features=VizDisplayCompositor"
+ENV PUPPETEER_ARGS="--disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-features=VizDisplayCompositor --disable-extensions --disable-plugins --disable-images --disable-javascript --disable-web-security --disable-features=VizDisplayCompositor,VizHitTestSurfaceLayer --disable-crash-reporter --disable-breakpad --disable-logging --disable-component-extensions-with-background-pages"
+ENV CHROME_CRASHPAD_DATABASE=/tmp/chromium-crashpad
 
 # Copy package files first for caching
 COPY package.json ./
@@ -49,7 +50,11 @@ RUN npm run build
 
 # Create non-root user for running the app
 RUN useradd -r -s /bin/false renderer
-RUN chown -R renderer:renderer /app
+RUN mkdir -p /home/renderer && chown -R renderer:renderer /home/renderer /app
+
+# Create Chromium crash dump directory
+RUN mkdir -p /tmp/chromium-crashpad && chown -R renderer:renderer /tmp/chromium-crashpad
+
 USER renderer
 
 # Start the handler
