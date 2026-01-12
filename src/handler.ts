@@ -16,7 +16,7 @@ async function renderVideoCLI(input: RenderInput): Promise<any> {
     }
 
     return new Promise((resolve, reject) => {
-        const projectFile = path.resolve('./dist/project.js');
+        const projectFile = path.resolve('./src/project.ts');
         const outputPath = path.join(outputDir, `${outputFileName}.mp4`);
 
         console.log(`🎭 Starting Revideo serve process for project: ${projectFile}`);

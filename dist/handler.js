@@ -17,7 +17,7 @@ async function renderVideoCLI(input) {
         fs_1.default.mkdirSync(outputDir, { recursive: true });
     }
     return new Promise((resolve, reject) => {
-        const projectFile = path_1.default.resolve('./dist/project.js');
+        const projectFile = path_1.default.resolve('./src/project.ts');
         const outputPath = path_1.default.join(outputDir, `${outputFileName}.mp4`);
         console.log(`🎭 Starting Revideo serve process for project: ${projectFile}`);
         // Start the revideo serve process
