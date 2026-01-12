@@ -37,18 +37,28 @@ async function renderVideo(input: RenderInput): Promise<any> {
     try {
         const projectFile = path.resolve('./src/project.ts');
         console.log(`Rendering project: ${projectFile}`);
+        console.log(`🔍 Starting renderVideoLib...`);
 
         // Create a promise with timeout
-        const renderPromise = renderVideoLib({
-            projectFile: projectFile,
-            variables: variables
-        });
+        const renderPromise = (async () => {
+            console.log('📹 Initializing renderer...');
+            const result = await renderVideoLib({
+                projectFile: projectFile,
+                variables: variables
+            });
+            console.log('✅ renderVideoLib returned:', result);
+            return result;
+        })();
 
-        // Add 5-minute timeout
+        // Add 2-minute timeout (shorter for debugging)
         const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Render timeout after 5 minutes')), 300000);
+            const timer = setTimeout(() => {
+                console.error('⏱️ TIMEOUT: Render took too long!');
+                reject(new Error('Render timeout after 2 minutes'));
+            }, 120000);
         });
 
+        console.log('⏳ Waiting for render to complete...');
         const outputPath = await Promise.race([renderPromise, timeoutPromise]);
 
         console.log("✅ Render complete:", outputPath);
@@ -57,12 +67,15 @@ async function renderVideo(input: RenderInput): Promise<any> {
             throw new Error(`Output file not created: ${outputPath}`);
         }
 
+        const fileSize = fs.statSync(outputPath).size;
+        console.log(`📊 Output file size: ${fileSize} bytes`);
+
         return {
             status: 'completed',
             message: 'Video rendered successfully',
             output_path: outputPath,
             output_url: `/output/${path.basename(outputPath)}`,
-            file_size: fs.statSync(outputPath).size
+            file_size: fileSize
         };
 
     } catch (err: any) {
@@ -70,7 +83,8 @@ async function renderVideo(input: RenderInput): Promise<any> {
         console.error("Stack trace:", err.stack);
         return {
             status: 'failed',
-            error: err.message || String(err)
+            error: err.message || String(err),
+            error_stack: err.stack
         };
     }
 }
