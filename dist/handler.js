@@ -7,6 +7,10 @@ const renderer_1 = require("@revideo/renderer");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const http_1 = __importDefault(require("http"));
+// Configure Puppeteer BEFORE importing renderVideo
+process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
+process.env.PUPPETEER_EXECUTABLE_PATH = '/usr/bin/chromium';
+process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu';
 async function renderVideo(input) {
     const variables = input.variables || {};
     const outputFileName = input.outputFileName || `output-${Date.now()}`;
@@ -19,15 +23,23 @@ async function renderVideo(input) {
     try {
         const projectFile = path_1.default.resolve('./src/project.ts');
         console.log(`📁 Project file: ${projectFile}`);
-        console.log(`📹 Starting renderVideoLib...`);
-        // Simple renderVideoLib call like the example
-        const outputPath = await (0, renderer_1.renderVideo)({
+        console.log(`🌍 Puppeteer config: EXECUTABLE_PATH=${process.env.PUPPETEER_EXECUTABLE_PATH}`);
+        console.log(`📹 Starting renderVideoLib with timeout...`);
+        // Wrap with timeout to prevent hanging
+        const renderPromise = (0, renderer_1.renderVideo)({
             projectFile: projectFile,
             variables: variables,
             settings: {
                 logProgress: true
             }
         });
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => {
+                console.error('⏱️ TIMEOUT: Render exceeded 5 minutes!');
+                reject(new Error('Render timeout after 5 minutes'));
+            }, 300000); // 5 minutes
+        });
+        const outputPath = await Promise.race([renderPromise, timeoutPromise]);
         console.log(`✅ Render complete`);
         console.log(`📁 Output path: ${outputPath}`);
         if (!fs_1.default.existsSync(outputPath)) {

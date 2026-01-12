@@ -5,7 +5,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/handler.js",
-    "dev": "tsx src/handler.ts"
+    "dev": "tsx src/handler.ts",
+    "test": "node test-and-serve.js",
+    "test:request": "curl -X POST http://localhost:8000/render -H \"Content-Type: application/json\" -d '{\"input\": {\"variables\": {}}}'",
+    "test:health": "curl http://localhost:8000/health"
   },
   "dependencies": {
     "@revideo/renderer": "^0.10.4",
