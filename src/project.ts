@@ -12,9 +12,7 @@ export default makeProject({
       exporter: {
         name: '@revideo/core/ffmpeg',
         options: {
-          format: 'mp4',
-          crf: 23, // Add quality setting
-          preset: 'medium' // Add encoding preset
+          format: 'mp4'
         }
       }
     }

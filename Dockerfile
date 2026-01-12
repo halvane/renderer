@@ -1,8 +1,8 @@
-# RunPod Serverless Dockerfile for Revideo
-FROM node:20-bullseye-slim
+# Use a more recent Debian base with updated Chromium
+FROM node:20-bookworm-slim
 
 # Install system dependencies for Puppeteer and FFmpeg
-# We use bullseye-slim for smaller size but install necessary libs
+# Use bookworm for newer Chromium version
 RUN apt-get update && apt-get install -y \
     chromium \
     ffmpeg \
@@ -25,6 +25,12 @@ RUN apt-get update && apt-get install -y \
     libatk-bridge2.0-0 \
     libpangocairo-1.0-0 \
     libgtk-3-0 \
+    libgbm1 \
+    libxdamage1 \
+    libxfixes3 \
+    libdrm2 \
+    libxkbcommon0 \
+    libatspi2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
