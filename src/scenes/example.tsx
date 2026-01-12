@@ -1,4 +1,4 @@
-import {Rect, Txt, makeScene2D} from '@revideo/2d';
+import {Rect, Txt, makeScene2D, waitFor} from '@revideo/2d';
 
 export default makeScene2D('example', function* (view) {
   // Ultra simple static scene for testing
@@ -21,6 +21,6 @@ export default makeScene2D('example', function* (view) {
     })
   );
 
-  // No animations - just static content
-  yield; // Wait for one frame
+  // Wait for 3 seconds to give video encoder time to work
+  yield* waitFor(3);
 });
