@@ -37,6 +37,12 @@ async function renderVideo(input: RenderInput): Promise<any> {
     try {
         const projectFile = path.resolve('./src/project.ts');
         console.log(`Rendering project: ${projectFile}`);
+        
+        // Verify project can be imported
+        console.log('🔍 Importing project...');
+        const project = await import(projectFile);
+        console.log('✅ Project imported successfully:', typeof project, project.default ? 'has default export' : 'no default export');
+        
         console.log(`🔍 Starting renderVideoLib...`);
 
         // Wrap renderVideoLib with detailed logging

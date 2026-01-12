@@ -1,5 +1,5 @@
 import {makeProject} from '@revideo/core';
-import example from './scenes/example';
+import example from './scenes/example.tsx';
 
 export default makeProject({
   scenes: [example],
