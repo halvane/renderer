@@ -39,44 +39,70 @@ async function renderVideo(input: RenderInput): Promise<any> {
         console.log(`Rendering project: ${projectFile}`);
         console.log(`🔍 Starting renderVideoLib...`);
 
-        // Create a promise with timeout
+        // Wrap renderVideoLib with detailed logging
+        let renderStarted = false;
+        let renderCompleted = false;
+
         const renderPromise = (async () => {
-            console.log('📹 Initializing renderer...');
-            const result = await renderVideoLib({
-                projectFile: projectFile,
-                variables: variables
-            });
-            console.log('✅ renderVideoLib returned:', result);
-            return result;
+            try {
+                console.log('📹 Calling renderVideoLib...');
+                renderStarted = true;
+                
+                const result = await renderVideoLib({
+                    projectFile: projectFile,
+                    variables: variables
+                });
+                
+                renderCompleted = true;
+                console.log('✅ renderVideoLib returned:', result);
+                return result;
+            } catch (error) {
+                console.error('❌ renderVideoLib threw error:', error);
+                throw error;
+            }
         })();
 
-        // Add 2-minute timeout (shorter for debugging)
-        const timeoutPromise = new Promise<never>((_, reject) => {
-            const timer = setTimeout(() => {
-                console.error('⏱️ TIMEOUT: Render took too long!');
-                reject(new Error('Render timeout after 2 minutes'));
-            }, 120000);
-        });
+        // Monitor progress
+        const progressInterval = setInterval(() => {
+            if (renderStarted && !renderCompleted) {
+                console.log('⏳ Still rendering...');
+            }
+        }, 10000); // Log every 10 seconds
 
-        console.log('⏳ Waiting for render to complete...');
-        const outputPath = await Promise.race([renderPromise, timeoutPromise]);
+        try {
+            console.log('⏳ Waiting for render to complete (2 min timeout)...');
+            
+            const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => {
+                    console.error('⏱️ TIMEOUT: Render exceeded 2 minutes!');
+                    console.error('renderStarted:', renderStarted, 'renderCompleted:', renderCompleted);
+                    reject(new Error('Render timeout after 2 minutes'));
+                }, 120000);
+            });
 
-        console.log("✅ Render complete:", outputPath);
+            const outputPath = await Promise.race([renderPromise, timeoutPromise]);
+            clearInterval(progressInterval);
 
-        if (!fs.existsSync(outputPath)) {
-            throw new Error(`Output file not created: ${outputPath}`);
+            console.log("✅ Render complete:", outputPath);
+
+            if (!fs.existsSync(outputPath)) {
+                throw new Error(`Output file not created: ${outputPath}`);
+            }
+
+            const fileSize = fs.statSync(outputPath).size;
+            console.log(`📊 Output file size: ${fileSize} bytes`);
+
+            return {
+                status: 'completed',
+                message: 'Video rendered successfully',
+                output_path: outputPath,
+                output_url: `/output/${path.basename(outputPath)}`,
+                file_size: fileSize
+            };
+        } catch (timeoutError) {
+            clearInterval(progressInterval);
+            throw timeoutError;
         }
-
-        const fileSize = fs.statSync(outputPath).size;
-        console.log(`📊 Output file size: ${fileSize} bytes`);
-
-        return {
-            status: 'completed',
-            message: 'Video rendered successfully',
-            output_path: outputPath,
-            output_url: `/output/${path.basename(outputPath)}`,
-            file_size: fileSize
-        };
 
     } catch (err: any) {
         console.error("❌ Render error:", err.message || err);
