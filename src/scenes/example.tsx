@@ -31,19 +31,3 @@ export default makeScene2D('example', function* (view) {
   yield* txtRef().scale(1.2, 1);
   yield* txtRef().scale(1, 0.5);
 });
-
-  view.add(
-    new Txt({
-      text: subtitle,
-      fill: themeColor,
-      fontSize: 60,
-      fontFamily: 'Arial, sans-serif',
-      y: 80,
-      opacity: 0.8
-    })
-  );
-
-  // Simple animation
-  yield* txtRef().scale(1.1, 2);
-  yield* bgRef().fill('#1a1a1a', 2);
-});
