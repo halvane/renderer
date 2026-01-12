@@ -38,13 +38,24 @@ async function renderVideo(input: RenderInput): Promise<any> {
         const projectFile = path.resolve('./src/project.ts');
         console.log(`Rendering project: ${projectFile}`);
 
-        // Use renderVideo directly from @revideo/renderer library
-        const outputPath = await renderVideoLib({
+        // Create a promise with timeout
+        const renderPromise = renderVideoLib({
             projectFile: projectFile,
             variables: variables
         });
 
+        // Add 5-minute timeout
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Render timeout after 5 minutes')), 300000);
+        });
+
+        const outputPath = await Promise.race([renderPromise, timeoutPromise]);
+
         console.log("✅ Render complete:", outputPath);
+
+        if (!fs.existsSync(outputPath)) {
+            throw new Error(`Output file not created: ${outputPath}`);
+        }
 
         return {
             status: 'completed',
@@ -55,7 +66,8 @@ async function renderVideo(input: RenderInput): Promise<any> {
         };
 
     } catch (err: any) {
-        console.error("❌ Render error:", err);
+        console.error("❌ Render error:", err.message || err);
+        console.error("Stack trace:", err.stack);
         return {
             status: 'failed',
             error: err.message || String(err)
