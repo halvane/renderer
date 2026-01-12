@@ -12,8 +12,7 @@ export default makeProject({
       exporter: {
         name: '@revideo/core/ffmpeg',
         options: {
-          format: 'mp4',
-          quality: 'high'
+          format: 'mp4'
         }
       }
     }

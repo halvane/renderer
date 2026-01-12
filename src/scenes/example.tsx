@@ -1,13 +1,13 @@
 import {Rect, Txt, makeScene2D} from '@revideo/2d';
 import {createRef} from '@revideo/core';
 
-export default makeScene2D('example', function* (view) {
+export default makeScene2D('example', function* (view, variables) {
   const txtRef = createRef<Txt>();
   const bgRef = createRef<Rect>();
 
   // Get variables passed from the handler
-  const title = view.variables?.headline || 'VPS Render Test';
-  const subtitle = view.variables?.subheading || 'Rendering from VPS';
+  const title = variables?.headline || 'VPS Render Test';
+  const subtitle = variables?.subheading || 'Rendering from VPS';
   const themeColor = '#00ff88';
 
   view.add(
