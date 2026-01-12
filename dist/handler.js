@@ -19,12 +19,8 @@ async function renderVideo(input) {
         fs_1.default.mkdirSync(outputDir, { recursive: true });
     }
     try {
-        const projectFile = path_1.default.resolve('./src/project.tsx');
+        const projectFile = path_1.default.resolve('./dist/project.js');
         console.log(`Rendering project: ${projectFile}`);
-        // Verify project can be imported
-        console.log('🔍 Importing project...');
-        const project = await import(projectFile);
-        console.log('✅ Project imported successfully:', typeof project, project.default ? 'has default export' : 'no default export');
         console.log(`🔍 Starting renderVideoLib...`);
         // Wrap renderVideoLib with detailed logging
         let renderStarted = false;
