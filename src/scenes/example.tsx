@@ -6,8 +6,8 @@ export default makeScene2D('example', function* (view) {
   const bgRef = createRef<Rect>();
 
   // Get variables passed from the handler
-  const title = 'RunPod Render'; // For now, hardcoded
-  const subtitle = 'Serverless Video Generation';
+  const title = view.variables?.headline || 'VPS Render Test';
+  const subtitle = view.variables?.subheading || 'Rendering from VPS';
   const themeColor = '#00ff88';
 
   view.add(
