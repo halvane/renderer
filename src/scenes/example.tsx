@@ -5,15 +5,11 @@ export default makeScene2D('example', function* (view) {
   const txtRef = createRef<Txt>();
   const bgRef = createRef<Rect>();
 
-  // Get variables passed from the handler
-  const title = 'VPS Render Test'; // For now, hardcoded until we figure out variable access
-  const subtitle = 'Rendering from VPS';
-  const themeColor = '#00ff88';
-
+  // Simple hardcoded scene for testing
   view.add(
     new Rect({
       ref: bgRef,
-      size: view.size,
+      size: { x: 1920, y: 1080 },
       fill: '#111111'
     })
   );
@@ -21,14 +17,20 @@ export default makeScene2D('example', function* (view) {
   view.add(
     new Txt({
       ref: txtRef,
-      text: title,
+      text: 'VPS Render Test',
       fill: 'white',
       fontSize: 120,
       fontFamily: 'Arial, sans-serif',
       fontWeight: 800,
+      x: 0,
       y: -50
     })
   );
+
+  // Simple animation
+  yield* txtRef().scale(1.2, 1);
+  yield* txtRef().scale(1, 0.5);
+});
 
   view.add(
     new Txt({
