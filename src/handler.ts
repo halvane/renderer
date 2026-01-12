@@ -49,18 +49,31 @@ async function renderVideo(input: RenderInput): Promise<any> {
                 '--fast',
                 '--verbose'
             ], {
-                stdio: 'inherit',
+                stdio: ['inherit', 'pipe', 'pipe'], // Capture stdout and stderr
                 env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' }
             });
 
-            let outputPath = '';
+            let stdout = '';
+            let stderr = '';
+
+            cliProcess.stdout?.on('data', (data) => {
+                stdout += data.toString();
+                console.log('CLI stdout:', data.toString());
+            });
+
+            cliProcess.stderr?.on('data', (data) => {
+                stderr += data.toString();
+                console.error('CLI stderr:', data.toString());
+            });
 
             cliProcess.on('close', (code) => {
+                console.log(`CLI process exited with code ${code}`);
                 if (code === 0) {
-                    outputPath = path.join(outputDir, `${outputFileName}.mp4`);
+                    const outputPath = path.join(outputDir, `${outputFileName}.mp4`);
                     resolve(outputPath);
                 } else {
-                    reject(new Error(`CLI process exited with code ${code}`));
+                    const errorMsg = `CLI process exited with code ${code}. Stdout: ${stdout}. Stderr: ${stderr}`;
+                    reject(new Error(errorMsg));
                 }
             });
 
