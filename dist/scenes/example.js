@@ -3,36 +3,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _2d_1 = require("@revideo/2d");
 const core_1 = require("@revideo/core");
 exports.default = (0, _2d_1.makeScene2D)('example', function* (view) {
-    const txtRef = (0, core_1.createRef)();
-    const bgRef = (0, core_1.createRef)();
-    // Get variables passed from the handler
-    const title = 'RunPod Render'; // For now, hardcoded
-    const subtitle = 'Serverless Video Generation';
-    const themeColor = '#00ff88';
+    // Ultra simple static scene for testing
     view.add(new _2d_1.Rect({
-        ref: bgRef,
-        size: view.size,
+        size: { x: 1920, y: 1080 },
         fill: '#111111'
     }));
     view.add(new _2d_1.Txt({
-        ref: txtRef,
-        text: title,
+        text: 'VPS Render Test',
         fill: 'white',
         fontSize: 120,
         fontFamily: 'Arial, sans-serif',
         fontWeight: 800,
-        y: -50
+        x: 0,
+        y: 0
     }));
-    view.add(new _2d_1.Txt({
-        text: subtitle,
-        fill: themeColor,
-        fontSize: 60,
-        fontFamily: 'Arial, sans-serif',
-        y: 80,
-        opacity: 0.8
-    }));
-    // Simple animation
-    yield* txtRef().scale(1.1, 2);
-    yield* bgRef().fill('#1a1a1a', 2);
+    // Wait for 5 seconds to give video encoder time to work
+    yield* (0, core_1.waitFor)(5);
 });
 //# sourceMappingURL=example.js.map

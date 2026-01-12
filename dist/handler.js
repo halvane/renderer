@@ -3,49 +3,92 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const child_process_1 = require("child_process");
-const util_1 = require("util");
+const renderer_1 = require("@revideo/renderer");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const http_1 = __importDefault(require("http"));
-const execAsync = (0, util_1.promisify)(child_process_1.exec);
+// Configure Puppeteer for Docker environment
+process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
+process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad --enable-experimental-web-platform-features --enable-features=WebCodecs,SharedArrayBuffer --disable-background-media-download --disable-hang-monitor --disable-prompt-on-repost --memory-pressure-off --use-gl=swiftshader --enable-accelerated-video-decode --allow-running-insecure-content --disable-web-security --disable-features=VizDisplayCompositor --disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor,TranslateUI,BlinkGenPropertyTrees --enable-logging=stderr --v=1';
 async function renderVideo(input) {
     const variables = input.variables || {};
-    const outputFileName = input.outputFileName || `output-${Date.now()}.mp4`;
+    const outputFileName = input.outputFileName || `output-${Date.now()}`;
     console.log("🚀 Starting render job with input:", JSON.stringify(input));
     const outputDir = path_1.default.resolve('output');
     if (!fs_1.default.existsSync(outputDir)) {
         fs_1.default.mkdirSync(outputDir, { recursive: true });
     }
-    const outputPath = path_1.default.join(outputDir, outputFileName);
     try {
-        // Use npx to run Revideo CLI with the compiled JavaScript file
-        const projectFile = path_1.default.resolve('./dist/project.js');
-        const renderCommand = `npx -y @revideo/cli@0.10.4 render "${projectFile}" --output "${outputPath}"`;
-        console.log("Running command:", renderCommand);
-        const { stdout, stderr } = await execAsync(renderCommand);
-        if (stderr) {
-            console.log("Render stderr:", stderr);
+        const projectFile = path_1.default.resolve('./src/project.tsx');
+        console.log(`Rendering project: ${projectFile}`);
+        // Verify project can be imported
+        console.log('🔍 Importing project...');
+        const project = await import(projectFile);
+        console.log('✅ Project imported successfully:', typeof project, project.default ? 'has default export' : 'no default export');
+        console.log(`🔍 Starting renderVideoLib...`);
+        // Wrap renderVideoLib with detailed logging
+        let renderStarted = false;
+        let renderCompleted = false;
+        const renderPromise = (async () => {
+            try {
+                console.log('📹 Calling renderVideoLib...');
+                renderStarted = true;
+                const result = await (0, renderer_1.renderVideo)({
+                    projectFile: projectFile,
+                    variables: variables
+                });
+                renderCompleted = true;
+                console.log('✅ renderVideoLib returned:', result);
+                return result;
+            }
+            catch (error) {
+                console.error('❌ renderVideoLib threw error:', error);
+                throw error;
+            }
+        })();
+        // Monitor progress
+        const progressInterval = setInterval(() => {
+            if (renderStarted && !renderCompleted) {
+                console.log('⏳ Still rendering...');
+            }
+        }, 10000); // Log every 10 seconds
+        try {
+            console.log('⏳ Waiting for render to complete (2 min timeout)...');
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    console.error('⏱️ TIMEOUT: Render exceeded 2 minutes!');
+                    console.error('renderStarted:', renderStarted, 'renderCompleted:', renderCompleted);
+                    reject(new Error('Render timeout after 2 minutes'));
+                }, 120000);
+            });
+            const outputPath = await Promise.race([renderPromise, timeoutPromise]);
+            clearInterval(progressInterval);
+            console.log("✅ Render complete:", outputPath);
+            if (!fs_1.default.existsSync(outputPath)) {
+                throw new Error(`Output file not created: ${outputPath}`);
+            }
+            const fileSize = fs_1.default.statSync(outputPath).size;
+            console.log(`📊 Output file size: ${fileSize} bytes`);
+            return {
+                status: 'completed',
+                message: 'Video rendered successfully',
+                output_path: outputPath,
+                output_url: `/output/${path_1.default.basename(outputPath)}`,
+                file_size: fileSize
+            };
         }
-        console.log("Render stdout:", stdout);
-        // Check if output file was created
-        if (!fs_1.default.existsSync(outputPath)) {
-            throw new Error(`Output file was not created: ${outputPath}`);
+        catch (timeoutError) {
+            clearInterval(progressInterval);
+            throw timeoutError;
         }
-        console.log("✅ Render complete!");
-        return {
-            status: 'completed',
-            message: 'Video rendered successfully',
-            output_path: outputPath,
-            output_url: `/output/${outputFileName}`,
-            file_size: fs_1.default.statSync(outputPath).size
-        };
     }
     catch (err) {
-        console.error("❌ Render error:", err);
+        console.error("❌ Render error:", err.message || err);
+        console.error("Stack trace:", err.stack);
         return {
             status: 'failed',
-            error: err.message || String(err)
+            error: err.message || String(err),
+            error_stack: err.stack
         };
     }
 }
