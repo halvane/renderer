@@ -7,13 +7,125 @@ const renderer_1 = require("@revideo/renderer");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const http_1 = __importDefault(require("http"));
-// Configure Puppeteer for Docker environment
-process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
-process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad --enable-experimental-web-platform-features --enable-features=WebCodecs,SharedArrayBuffer --disable-background-media-download --disable-hang-monitor --disable-prompt-on-repost --memory-pressure-off --use-gl=swiftshader --enable-accelerated-video-decode --allow-running-insecure-content --disable-web-security --disable-features=VizDisplayCompositor --disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor,TranslateUI,BlinkGenPropertyTrees --enable-logging=stderr --v=1';
-async function renderVideo(input) {
+const child_process_1 = require("child_process");
+async function renderVideoCLI(input) {
     const variables = input.variables || {};
     const outputFileName = input.outputFileName || `output-${Date.now()}`;
+    console.log("🎬 Starting CLI-based render job with input:", JSON.stringify(input));
+    const outputDir = path_1.default.resolve('output');
+    if (!fs_1.default.existsSync(outputDir)) {
+        fs_1.default.mkdirSync(outputDir, { recursive: true });
+    }
+    return new Promise((resolve, reject) => {
+        const projectFile = path_1.default.resolve('./dist/project.js');
+        const outputPath = path_1.default.join(outputDir, `${outputFileName}.mp4`);
+        console.log(`🎭 Starting Revideo serve process for project: ${projectFile}`);
+        // Start the revideo serve process
+        const serveProcess = (0, child_process_1.spawn)('npx', ['@revideo/cli', 'serve', projectFile, '--port', '3001'], {
+            stdio: ['pipe', 'pipe', 'pipe'],
+            env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' }
+        });
+        let serveReady = false;
+        let renderRequested = false;
+        // Handle serve process output
+        serveProcess.stdout.on('data', (data) => {
+            const output = data.toString();
+            console.log('📺 Serve stdout:', output);
+            if (output.includes('Server started') || output.includes('listening')) {
+                serveReady = true;
+                console.log('✅ Revideo serve process ready');
+                if (!renderRequested) {
+                    renderRequested = true;
+                    // Make HTTP request to render endpoint
+                    setTimeout(() => {
+                        makeRenderRequest(outputPath, variables, serveProcess, resolve, reject);
+                    }, 2000); // Wait a bit for server to be fully ready
+                }
+            }
+        });
+        serveProcess.stderr.on('data', (data) => {
+            console.log('📺 Serve stderr:', data.toString());
+        });
+        serveProcess.on('close', (code) => {
+            console.log(`📺 Serve process exited with code ${code}`);
+            if (!serveReady) {
+                reject(new Error(`Serve process failed to start (exit code: ${code})`));
+            }
+        });
+        serveProcess.on('error', (error) => {
+            console.error('📺 Serve process error:', error);
+            reject(error);
+        });
+        // Timeout after 5 minutes
+        setTimeout(() => {
+            console.log('⏰ CLI render timeout - killing serve process');
+            serveProcess.kill('SIGTERM');
+            setTimeout(() => {
+                if (!serveProcess.killed) {
+                    serveProcess.kill('SIGKILL');
+                }
+            }, 5000);
+            reject(new Error('CLI render timeout after 5 minutes'));
+        }, 300000);
+    });
+}
+async function makeRenderRequest(outputPath, variables, serveProcess, resolve, reject) {
+    try {
+        console.log('🌐 Making render request to local serve endpoint');
+        const response = await fetch('http://localhost:3001/render', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ variables })
+        });
+        if (!response.ok) {
+            throw new Error(`Render request failed: ${response.status} ${response.statusText}`);
+        }
+        const result = await response.json();
+        console.log('✅ Render request successful:', result);
+        // Wait a bit for file to be written
+        setTimeout(() => {
+            if (fs_1.default.existsSync(outputPath)) {
+                console.log('📁 Output file found:', outputPath);
+                serveProcess.kill('SIGTERM');
+                resolve({
+                    status: 'completed',
+                    message: 'Video rendered successfully via CLI',
+                    output_path: outputPath,
+                    output_url: `/output/${path_1.default.basename(outputPath)}`,
+                    file_size: fs_1.default.statSync(outputPath).size
+                });
+            }
+            else {
+                console.log('❌ Output file not found:', outputPath);
+                serveProcess.kill('SIGTERM');
+                reject(new Error('Output file was not created'));
+            }
+        }, 5000);
+    }
+    catch (error) {
+        console.error('❌ Render request failed:', error);
+        serveProcess.kill('SIGTERM');
+        reject(error);
+    }
+}
+async function renderVideo(input) {
     console.log("🚀 Starting render job with input:", JSON.stringify(input));
+    // Try CLI approach first
+    try {
+        console.log("🎭 Attempting CLI-based rendering...");
+        return await renderVideoCLI(input);
+    }
+    catch (cliError) {
+        console.log("❌ CLI rendering failed:", cliError instanceof Error ? cliError.message : String(cliError));
+        console.log("🔄 Falling back to library-based rendering...");
+        // Fallback to library approach
+        return await renderVideoLibFallback(input);
+    }
+}
+async function renderVideoLibFallback(input) {
+    const variables = input.variables || {};
+    const outputFileName = input.outputFileName || `output-${Date.now()}`;
+    console.log("📚 Starting library-based render job with input:", JSON.stringify(input));
     const outputDir = path_1.default.resolve('output');
     if (!fs_1.default.existsSync(outputDir)) {
         fs_1.default.mkdirSync(outputDir, { recursive: true });
