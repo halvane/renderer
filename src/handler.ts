@@ -75,7 +75,7 @@ async function renderVideo(input: RenderInput): Promise<any> {
             }, 240000);
         });
 
-        const outputPath = await cliPromise;
+        const outputPath = await cliPromise as string;
 
         console.log("✅ Render complete:", outputPath);
 
