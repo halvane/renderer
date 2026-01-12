@@ -64,7 +64,8 @@ RUN mkdir -p /home/renderer && chown -R renderer:renderer /home/renderer /app
 # Create Chromium crash dump directory
 RUN mkdir -p /tmp/chromium-crashpad && chown -R renderer:renderer /tmp/chromium-crashpad
 
-USER renderer
+# Run as root for Chromium/Puppeteer (requires namespace capabilities)
+# USER renderer
 
 # Start the handler
 CMD ["node", "dist/handler.js"]
