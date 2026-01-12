@@ -33,8 +33,11 @@ WORKDIR /app
 # Set Puppeteer env to use installed chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad --disable-logging --disable-component-extensions-with-background-pages --enable-experimental-web-platform-features --enable-features=WebCodecs --disable-background-media-download --disable-hang-monitor --disable-prompt-on-repost --memory-pressure-off"
+ENV PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad --disable-logging --disable-component-extensions-with-background-pages --enable-experimental-web-platform-features --enable-features=WebCodecs --disable-background-media-download --disable-hang-monitor --disable-prompt-on-repost --memory-pressure-off --use-gl=swiftshader --enable-accelerated-video-decode --allow-running-insecure-content --disable-web-security --disable-features=VizDisplayCompositor"
 ENV CHROME_CRASHPAD_DATABASE=/tmp/chromium-crashpad
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV LIBGL_ALWAYS_SOFTWARE=1
+ENV DISPLAY=:99
 
 # Copy package files first for caching
 COPY package.json ./
@@ -57,5 +60,5 @@ RUN mkdir -p /tmp/chromium-crashpad && chown -R renderer:renderer /tmp/chromium-
 
 USER renderer
 
-# Start the handler with increased memory
-CMD ["node", "--max-old-space-size=4096", "dist/handler.js"]
+# Start the handler
+CMD ["node", "dist/handler.js"]
