@@ -1,4 +1,5 @@
-import {Rect, Txt, makeScene2D, waitFor} from '@revideo/2d';
+import {Rect, Txt, makeScene2D} from '@revideo/2d';
+import {waitFor} from '@revideo/core';
 
 export default makeScene2D('example', function* (view) {
   // Ultra simple static scene for testing
