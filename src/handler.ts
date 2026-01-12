@@ -5,7 +5,7 @@ import http from 'http';
 
 // Configure Puppeteer for Docker environment
 process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
-process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad';
+process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad --enable-experimental-web-platform-features --enable-features=WebCodecs --disable-background-media-download --disable-hang-monitor --disable-prompt-on-repost --memory-pressure-off';
 
 interface RenderInput {
     variables?: Record<string, any>;

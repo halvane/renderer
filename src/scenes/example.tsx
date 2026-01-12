@@ -22,6 +22,6 @@ export default makeScene2D('example', function* (view) {
     })
   );
 
-  // Wait for 3 seconds to give video encoder time to work
-  yield* waitFor(3);
+  // Wait for 5 seconds to give video encoder time to work
+  yield* waitFor(5);
 });
