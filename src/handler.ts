@@ -2,10 +2,11 @@ import { renderVideo as renderVideoLib } from '@revideo/renderer';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
+import { spawn } from 'child_process';
 
 // Configure Puppeteer for Docker environment
 process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
-process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad --enable-experimental-web-platform-features --enable-features=WebCodecs --disable-background-media-download --disable-hang-monitor --disable-prompt-on-repost --memory-pressure-off --use-gl=swiftshader --enable-accelerated-video-decode --allow-running-insecure-content --disable-web-security --disable-features=VizDisplayCompositor';
+process.env.PUPPETEER_ARGS = '--no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --disable-default-apps --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --disable-crash-reporter --disable-breakpad --enable-experimental-web-platform-features --enable-features=WebCodecs,SharedArrayBuffer --disable-background-media-download --disable-hang-monitor --disable-prompt-on-repost --memory-pressure-off --use-gl=swiftshader --enable-accelerated-video-decode --allow-running-insecure-content --disable-web-security --disable-features=VizDisplayCompositor --disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor,TranslateUI,BlinkGenPropertyTrees --enable-logging=stderr --v=1';
 
 interface RenderInput {
     variables?: Record<string, any>;
@@ -38,11 +39,43 @@ async function renderVideo(input: RenderInput): Promise<any> {
         const projectFile = path.resolve('./src/project.ts');
         console.log(`Rendering project: ${projectFile}`);
 
-        // Direct library call instead of CLI
-        const outputPath = await renderVideoLib({
-            projectFile,
-            variables
+        // Try CLI approach with better error handling
+        const cliPromise = new Promise((resolve, reject) => {
+            const cliProcess = spawn('npx', [
+                'revideo', 'render', 
+                projectFile,
+                '--out-dir', outputDir,
+                '--out-file', `${outputFileName}.mp4`,
+                '--fast',
+                '--verbose'
+            ], {
+                stdio: 'inherit',
+                env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' }
+            });
+
+            let outputPath = '';
+
+            cliProcess.on('close', (code) => {
+                if (code === 0) {
+                    outputPath = path.join(outputDir, `${outputFileName}.mp4`);
+                    resolve(outputPath);
+                } else {
+                    reject(new Error(`CLI process exited with code ${code}`));
+                }
+            });
+
+            cliProcess.on('error', (err) => {
+                reject(err);
+            });
+
+            // Timeout after 4 minutes
+            setTimeout(() => {
+                cliProcess.kill('SIGTERM');
+                reject(new Error('CLI render timeout'));
+            }, 240000);
         });
+
+        const outputPath = await cliPromise;
 
         console.log("✅ Render complete:", outputPath);
 
