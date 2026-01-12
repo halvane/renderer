@@ -2,7 +2,6 @@ import { renderVideo as renderVideoLib } from '@revideo/renderer';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
-import { spawn } from 'child_process';
 
 // Configure Puppeteer for Docker environment
 process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
@@ -39,56 +38,11 @@ async function renderVideo(input: RenderInput): Promise<any> {
         const projectFile = path.resolve('./src/project.ts');
         console.log(`Rendering project: ${projectFile}`);
 
-        // Try CLI approach with better error handling
-        const cliPromise = new Promise((resolve, reject) => {
-            const cliProcess = spawn('npx', [
-                'revideo', 'render', 
-                projectFile,
-                '--out-dir', outputDir,
-                '--out-file', `${outputFileName}.mp4`,
-                '--fast',
-                '--verbose'
-            ], {
-                stdio: ['inherit', 'pipe', 'pipe'], // Capture stdout and stderr
-                env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' }
-            });
-
-            let stdout = '';
-            let stderr = '';
-
-            cliProcess.stdout?.on('data', (data) => {
-                stdout += data.toString();
-                console.log('CLI stdout:', data.toString());
-            });
-
-            cliProcess.stderr?.on('data', (data) => {
-                stderr += data.toString();
-                console.error('CLI stderr:', data.toString());
-            });
-
-            cliProcess.on('close', (code) => {
-                console.log(`CLI process exited with code ${code}`);
-                if (code === 0) {
-                    const outputPath = path.join(outputDir, `${outputFileName}.mp4`);
-                    resolve(outputPath);
-                } else {
-                    const errorMsg = `CLI process exited with code ${code}. Stdout: ${stdout}. Stderr: ${stderr}`;
-                    reject(new Error(errorMsg));
-                }
-            });
-
-            cliProcess.on('error', (err) => {
-                reject(err);
-            });
-
-            // Timeout after 4 minutes
-            setTimeout(() => {
-                cliProcess.kill('SIGTERM');
-                reject(new Error('CLI render timeout'));
-            }, 240000);
+        // Use renderVideo directly from @revideo/renderer library
+        const outputPath = await renderVideoLib({
+            projectFile: projectFile,
+            variables: variables
         });
-
-        const outputPath = await cliPromise as string;
 
         console.log("✅ Render complete:", outputPath);
 
